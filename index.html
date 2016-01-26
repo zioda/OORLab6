@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset='UTF-8' />
+	<style>
+		input, textarea {border:5px solid #CCC;margin:0px;padding:0px}
+
+		#body {max-width:4000px;margin:auto}
+		#log {width:100%;height:200px}
+		#message {width:100%;line-height:10px}
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script src="fancywebsocket.js"></script>
+	<script>
+		var Server;
+
+		function log( text ) {
+			$log = $('#log');
+			//Dodaj text do loga
+			$log.append(($log.val()?"\n":'')+text);
+			//Autoscroll
+			$log[0].scrollTop = $log[0].scrollHeight - $log[0].clientHeight;
+		}
+
+		function send( text ) {
+			Server.send( 'message', text );
+		}
+
+		$(document).ready(function() {
+			log('Łączenie...');
+			Server = new FancyWebSocket('ws://127.0.0.1:9300');
+
+			$('#message').keypress(function(e) {
+				if ( e.keyCode == 13 && this.value ) {
+					log( 'Ja: ' + this.value );
+					send( this.value );
+
+					$(this).val('');
+				}
+			});
+
+			//Daj znać, że użytkownik się połączył
+			Server.bind('open', function() {
+				log( "Połączono." );
+			});
+
+			//DC
+			Server.bind('close', function( data ) {
+				log( "Rozłączono." );
+			});
+
+			//zapisz do loga wiadomosci servera
+			Server.bind('message', function( payload ) {
+				log( payload );
+			});
+
+			Server.connect();
+		});
+	</script>
+</head>
+<body>
+	<div id='body'><br><br>CZAT</center><br>
+		<textarea id='log' name='log' readonly='readonly'></textarea><br/>
+		<input type='text' id='message' name='message' />
+	</div>
+</body>
+</html>
